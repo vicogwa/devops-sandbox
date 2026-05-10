@@ -8,50 +8,7 @@ Think of it as a stripped-down internal Heroku with a chaos toggle — built ent
 
 ## Architecture
 
-```
-                        ┌─────────────────────────────────────────────┐
-                        │               Linux VM                      │
-                        │                                             │
-  Browser / curl        │   ┌──────────────────────────────────────┐  │
-      │                 │   │          Nginx (Docker)               │  │
-      └────── :80 ──────┼──►│  /env-abc123/ → localhost:8101       │  │
-                        │   │  /env-def456/ → localhost:8102       │  │
-                        │   │  /api/        → localhost:5050       │  │
-                        │   └──────────┬──────────────────────────┘  │
-                        │              │ conf.d/*.conf (auto-written) │
-                        │              │                              │
-                        │   ┌──────────▼──────────────────────────┐  │
-                        │   │        Control API (Flask)           │  │
-                        │   │        localhost:5050                │  │
-                        │   │   POST /envs → create_env.sh        │  │
-                        │   │   DELETE /envs/:id → destroy_env.sh │  │
-                        │   │   POST /envs/:id/outage             │  │
-                        │   └──────────────────────────────────────┘  │
-                        │                                             │
-                        │   ┌──────────────────────────────────────┐  │
-                        │   │     Cleanup Daemon (Bash loop)       │  │
-                        │   │     Runs every 60s                   │  │
-                        │   │     Destroys expired envs by TTL     │  │
-                        │   └──────────────────────────────────────┘  │
-                        │                                             │
-                        │   ┌──────────────────────────────────────┐  │
-                        │   │     Health Poller (Python)           │  │
-                        │   │     Polls /health every 30s          │  │
-                        │   │     Marks env 'degraded' after 3     │  │
-                        │   │     consecutive failures             │  │
-                        │   └──────────────────────────────────────┘  │
-                        │                                             │
-                        │   ┌─────────────┐   ┌─────────────┐       │
-                        │   │  app-env-   │   │  app-env-   │       │
-                        │   │  abc123     │   │  def456     │  ...  │
-                        │   │  :8101      │   │  :8102      │       │
-                        │   │  net-env-   │   │  net-env-   │       │
-                        │   │  abc123     │   │  def456     │       │
-                        │   └─────────────┘   └─────────────┘       │
-                        │                                             │
-                        │   State: envs/<id>.json  Logs: logs/<id>/  │
-                        └─────────────────────────────────────────────┘
-```
+
 
 ### Key design decisions
 
@@ -66,6 +23,8 @@ Think of it as a stripped-down internal Heroku with a chaos toggle — built ent
 **Safety guard on chaos** — `simulate_outage.sh` checks the `sandbox.managed` label and refuses to run against any container that isn't a user environment. The Nginx and API containers are explicitly named in a blocklist as a second layer.
 
 ---
+<img width="936" height="633" alt="image" src="https://github.com/user-attachments/assets/ddbe0c67-0984-40d6-9cb3-dea1de899f21" />
+
 
 ## Prerequisites
 
