@@ -1,0 +1,22 @@
+FROM python:3.12-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    docker.io \
+    curl \
+    openssl \
+    iproute2 \
+ && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY platform/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY platform/ ./platform/
+COPY .env.example ./.env
+
+RUN chmod +x platform/*.sh
+
+ENV PYTHONUNBUFFERED=1
+
+CMD ["python3", "platform/api.py"]
