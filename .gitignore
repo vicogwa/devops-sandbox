@@ -1,0 +1,6 @@
+logs/
+envs/
+.env
+*.pyc
+__pycache__/
+nginx/conf.d/*.conf
